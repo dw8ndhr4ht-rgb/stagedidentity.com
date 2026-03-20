@@ -3,397 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Staged Identity – Geopolitische Netzanalysen</title>
-<meta name="description" content="Interaktive geopolitische Netzanalysen. Konflikte, Machtstrukturen, Wahrscheinlichkeiten.">
-<meta property="og:title" content="Staged Identity – Geopolitische Netzanalysen">
-<meta property="og:description" content="Interaktive Analyse geopolitischer Dynamiken mit vernetzten Faktoren und Wahrscheinlichkeiten.">
+<title>Staged Identity</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Instrument+Serif:ital@0;1&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1f12;overflow:hidden;height:100vh;width:100vw}
 
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+/* Static camo base layer - painted by JS once */
+#camo-static{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0}
 
-:root {
-  --bg: #08080c;
-  --surface: #0e0e14;
-  --surface2: #14141e;
-  --border: #1e1e2e;
-  --text: #a8a8b8;
-  --text-dim: #55556a;
-  --text-bright: #e8e8f0;
-  --accent: #c4362a;
-  --accent-dim: #c4362a40;
-  --warm: #d4a857;
+/* Sun rays behind camo */
+#sun{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1}
+
+/* Falling leaves layer */
+#leaves{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none}
+
+/* Holes mask - reveals sun through fallen patches */
+#holes{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3}
+
+#camo-static canvas,#sun canvas,#leaves canvas,#holes canvas{width:100%;height:100%}
+
+.center-ui{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:none}
+
+.iran-btn{
+  pointer-events:all;text-decoration:none;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 56px;
+  background:#1a1f12;
+  border:4px solid #0e1209;
+  box-shadow:6px 6px 0 #0e1209;
+  transition:all .2s;
+  cursor:pointer;
 }
-
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 14px;
-  line-height: 1.7;
-  overflow-x: hidden;
+.iran-btn:hover{
+  transform:translate(-3px,-3px);
+  box-shadow:9px 9px 0 #0e1209;
+  background:#222a16;
 }
-
-/* Noise overlay */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9999;
+.iran-btn:active{
+  transform:translate(3px,3px);
+  box-shadow:3px 3px 0 #0e1209;
 }
-
-/* Grid lines background */
-.grid-bg {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: 
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 120px 120px;
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 0;
+.btn-text{
+  font-family:'Playfair Display',serif;
+  font-size:56px;
+  font-weight:900;
+  font-style:italic;
+  color:#f0d848;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  text-shadow:3px 3px 0 #0e1209,-1px -1px 0 #0e1209,1px -1px 0 #0e1209,-1px 1px 0 #0e1209;
 }
-
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 40px;
-  position: relative;
-  z-index: 1;
-}
-
-/* Header */
-header {
-  padding: 80px 0 60px;
-  border-bottom: 1px solid var(--border);
-}
-
-.site-tag {
-  font-size: 10px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.site-tag::before {
-  content: '';
-  width: 24px;
-  height: 1px;
-  background: var(--accent);
-}
-
-h1 {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(42px, 6vw, 72px);
-  font-weight: 300;
-  line-height: 1.05;
-  color: var(--text-bright);
-  letter-spacing: -0.02em;
-  margin-bottom: 28px;
-}
-
-h1 em {
-  font-style: italic;
-  color: var(--accent);
-  font-weight: 300;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: var(--text-dim);
-  max-width: 540px;
-  line-height: 1.8;
-}
-
-/* Analyses grid */
-.analyses {
-  padding: 80px 0;
-}
-
-.section-label {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 48px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 24px;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 36px 32px;
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  position: relative;
-  transition: all 0.3s cubic-bezier(0.25, 0, 0, 1);
-  overflow: hidden;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 0;
-  background: var(--accent);
-  transition: height 0.4s cubic-bezier(0.25, 0, 0, 1);
-}
-
-.card:hover {
-  border-color: #2a2a3e;
-  background: var(--surface2);
-  transform: translateY(-2px);
-}
-
-.card:hover::before {
-  height: 100%;
-}
-
-.card-status {
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.status-live { background: var(--accent); animation: blink 2s infinite; }
-.status-soon { background: var(--warm); }
-.status-planned { background: var(--text-dim); }
-
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-.card-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
-  font-weight: 400;
-  color: var(--text-bright);
-  line-height: 1.2;
-  margin-bottom: 14px;
-  letter-spacing: -0.01em;
-}
-
-.card-desc {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.7;
-  margin-bottom: 24px;
-}
-
-.card-meta {
-  display: flex;
-  gap: 20px;
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-.card-meta span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.meta-num {
-  color: var(--text);
-  font-weight: 500;
-}
-
-.card-arrow {
-  position: absolute;
-  bottom: 32px;
-  right: 32px;
-  font-size: 18px;
-  color: var(--text-dim);
-  transition: all 0.3s;
-  opacity: 0;
-  transform: translateX(-8px);
-}
-
-.card:hover .card-arrow {
-  opacity: 1;
-  transform: translateX(0);
-  color: var(--accent);
-}
-
-/* Placeholder card */
-.card.placeholder {
-  border-style: dashed;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-  text-align: center;
-}
-
-.card.placeholder:hover::before { height: 0; }
-
-.card.placeholder .card-title {
-  font-size: 20px;
-  color: var(--text-dim);
-}
-
-.card.placeholder .card-desc {
-  font-size: 11px;
-}
-
-/* Footer */
-footer {
-  padding: 48px 0;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-footer .left {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-footer .right {
-  font-size: 10px;
-  color: var(--text-dim);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-/* Staggered load animation */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.card {
-  opacity: 0;
-  animation: fadeUp 0.6s cubic-bezier(0.25, 0, 0, 1) forwards;
-}
-
-.card:nth-child(1) { animation-delay: 0.1s; }
-.card:nth-child(2) { animation-delay: 0.2s; }
-.card:nth-child(3) { animation-delay: 0.3s; }
-.card:nth-child(4) { animation-delay: 0.4s; }
-.card:nth-child(5) { animation-delay: 0.5s; }
-.card:nth-child(6) { animation-delay: 0.6s; }
-
-header { opacity: 0; animation: fadeUp 0.8s cubic-bezier(0.25, 0, 0, 1) 0s forwards; }
-
-/* Responsive */
-@media (max-width: 640px) {
-  .container { padding: 0 20px; }
-  header { padding: 48px 0 40px; }
-  .analyses { padding: 48px 0; }
-  .card-grid { grid-template-columns: 1fr; }
-  footer { flex-direction: column; gap: 16px; text-align: center; }
+.btn-sub{
+  position:absolute;
+  bottom:-28px;
+  font-family:'Playfair Display',serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:#8a9a5a;
+  text-shadow:2px 2px 0 #0e1209;
 }
 </style>
 </head>
 <body>
 
-<div class="grid-bg"></div>
+<div id="camo-static"><canvas id="cv-camo"></canvas></div>
+<div id="sun"><canvas id="cv-sun"></canvas></div>
+<div id="holes"><canvas id="cv-holes"></canvas></div>
+<div id="leaves"><canvas id="cv-leaves"></canvas></div>
 
-<div class="container">
-  <header>
-    <div class="site-tag">Staged Identity</div>
-    <h1>Geopolitische<br><em>Netzanalysen</em></h1>
-    <p class="subtitle">Interaktive Netzwerkgraphen zu geopolitischen Konflikten und Machtstrukturen. Faktoren, Verbindungen, Wahrscheinlichkeiten. Regelmäßig aktualisiert.</p>
-  </header>
-
-  <section class="analyses">
-    <div class="section-label">Analysen</div>
-    <div class="card-grid">
-
-      <a class="card" href="./iran/">
-        <div class="card-status">
-          <span class="status-dot status-live"></span>
-          <span style="color:var(--accent)">Live · Tag 20</span>
-        </div>
-        <div class="card-title">Iran-Konflikt 2026</div>
-        <div class="card-desc">US-israelischer Angriff seit 28.02.2026. Operation Epic Fury. Hormuz-Blockade, Libanon-Krieg, globale Energiekrise. Netzwerk mit Echtzeit-Wahrscheinlichkeiten.</div>
-        <div class="card-meta">
-          <span><span class="meta-num">36</span> Faktoren</span>
-          <span><span class="meta-num">45</span> Verbindungen</span>
-          <span>Stand: 19.03.2026</span>
-        </div>
-        <span class="card-arrow">&rarr;</span>
-      </a>
-
-      <a class="card" href="./project2025/">
-        <div class="card-status">
-          <span class="status-dot status-soon"></span>
-          <span style="color:var(--warm)">In Arbeit</span>
-        </div>
-        <div class="card-title">Project 2025</div>
-        <div class="card-desc">Analyse der Heritage-Foundation-Blaupause und ihrer realen Umsetzung unter der zweiten Trump-Administration. Autoritärer vs. fiskalkonservativer Strang.</div>
-        <div class="card-meta">
-          <span>Geplant</span>
-        </div>
-        <span class="card-arrow">&rarr;</span>
-      </a>
-
-      <a class="card" href="./energie/">
-        <div class="card-status">
-          <span class="status-dot status-soon"></span>
-          <span style="color:var(--warm)">In Arbeit</span>
-        </div>
-        <div class="card-title">Globale Energiekrise</div>
-        <div class="card-desc">Hormuz-Blockade, LNG-Krise, Ölpreisschock. Kaskadeneffekte auf Asien, Europa, globale Lieferketten. Gewinner und Verlierer der neuen Energieordnung.</div>
-        <div class="card-meta">
-          <span>Geplant</span>
-        </div>
-        <span class="card-arrow">&rarr;</span>
-      </a>
-
-      <div class="card placeholder">
-        <div class="card-title">Weitere Analysen</div>
-        <div class="card-desc">Neue Netzwerkgraphen werden laufend ergänzt. China-Taiwan, Nordkorea, europäische Sicherheitsarchitektur.</div>
-      </div>
-
-    </div>
-  </section>
-
-  <footer>
-    <div class="left">Erstellt mit Claude · Daten aus öffentlichen Quellen</div>
-    <div class="right">stagedidentity.com</div>
-  </footer>
+<div class="center-ui">
+  <a class="iran-btn" href="./iran/">
+    <span class="btn-text">Iran</span>
+    <span class="btn-sub">Netzanalyse</span>
+  </a>
 </div>
 
+<script>
+var W,H,dpr=devicePixelRatio;
+var cvCamo=document.getElementById('cv-camo');
+var cxCamo=cvCamo.getContext('2d');
+var cvSun=document.getElementById('cv-sun');
+var cxSun=cvSun.getContext('2d');
+var cvHoles=document.getElementById('cv-holes');
+var cxHoles=cvHoles.getContext('2d');
+var cvLeaves=document.getElementById('cv-leaves');
+var cxLeaves=cvLeaves.getContext('2d');
+
+var COLORS=['#2d3a1f','#4a5a2e','#3b4a28','#1e2a14','#5c6b3a','#2a2a1a','#3d4e2a','#5a4a30','#1a1f12','#6b7a4a','#3a3020','#4e5e30'];
+var patches=[];
+var sunAngle=0;
+
+function resize(){
+  W=window.innerWidth;H=window.innerHeight;
+  [cvCamo,cvSun,cvHoles,cvLeaves].forEach(function(c){
+    c.width=W*dpr;c.height=H*dpr;
+    c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
+  });
+}
+
+function makePath(cx,pts){
+  cx.beginPath();
+  cx.moveTo(pts[0].x,pts[0].y);
+  for(var i=1;i<pts.length;i++){
+    var p=pts[i-1],c=pts[i];
+    cx.quadraticCurveTo(p.x,p.y,(p.x+c.x)/2,(p.y+c.y)/2);
+  }
+  var last=pts[pts.length-1],first=pts[0];
+  cx.quadraticCurveTo(last.x,last.y,(last.x+first.x)/2,(last.y+first.y)/2);
+  cx.closePath();
+}
+
+function genPatches(){
+  patches=[];
+  var size=55;
+  var cols=Math.ceil(W/size)+3;
+  var rows=Math.ceil(H/size)+3;
+  for(var row=0;row<rows;row++){
+    for(var col=0;col<cols;col++){
+      var bx=col*size-size*1.5+(row%2)*size*.5;
+      var by=row*size-size*1.5;
+      var pts=[];
+      var np=5+Math.floor(Math.random()*5);
+      var r=size*(.45+Math.random()*.45);
+      for(var p=0;p<np;p++){
+        var a=(p/np)*Math.PI*2;
+        var pr=r*(.6+Math.random()*.7);
+        pts.push({
+          x:Math.cos(a)*pr+(Math.random()-.5)*size*.35,
+          y:Math.sin(a)*pr+(Math.random()-.5)*size*.35
+        });
+      }
+      patches.push({
+        x:bx+(Math.random()-.5)*size*.4,
+        y:by+(Math.random()-.5)*size*.4,
+        pts:pts,
+        col:COLORS[Math.floor(Math.random()*COLORS.length)],
+        // Comic outline
+        outline:Math.random()>.6,
+        // Fall properties
+        delay:0,
+        fs:50+Math.random()*90,
+        rot:0,
+        rs:(Math.random()-.5)*3,
+        sa:15+Math.random()*50,
+        sf:.4+Math.random()*1.8,
+        phase:Math.random()*Math.PI*2,
+        falling:false,
+        fallen:false,
+        ft:0,
+        alpha:1,
+        // For leaf: copy of original position
+        ox:0,oy:0
+      });
+    }
+  }
+  // Randomize fall order
+  var order=patches.slice();
+  order.sort(function(){return Math.random()-.5;});
+  order.forEach(function(p,i){
+    p.delay=2+(i/order.length)*30+Math.random()*4;
+  });
+  // Set original positions
+  patches.forEach(function(p){p.ox=p.x;p.oy=p.y;});
+}
+
+// Paint static camo once
+function paintCamo(){
+  // Fill base
+  cxCamo.fillStyle='#1a1f12';
+  cxCamo.fillRect(0,0,W,H);
+  // Draw all patches
+  patches.forEach(function(p){
+    cxCamo.save();
+    cxCamo.translate(p.x,p.y);
+    makePath(cxCamo,p.pts);
+    cxCamo.fillStyle=p.col;
+    cxCamo.fill();
+    if(p.outline){
+      cxCamo.strokeStyle='rgba(10,10,5,.35)';
+      cxCamo.lineWidth=1.5;
+      cxCamo.stroke();
+    }
+    cxCamo.restore();
+  });
+}
+
+// Comic sun rays
+function drawSun(){
+  cxSun.clearRect(0,0,W,H);
+  
+  // Warm background
+  var g=cxSun.createRadialGradient(W*.5,-H*.05,0,W*.5,-H*.05,H*1.3);
+  g.addColorStop(0,'#fff8d0');
+  g.addColorStop(0.15,'#ffe870');
+  g.addColorStop(0.35,'#f0c030');
+  g.addColorStop(0.6,'#d09018');
+  g.addColorStop(1,'#1a1508');
+  cxSun.fillStyle=g;
+  cxSun.fillRect(0,0,W,H);
+  
+  // Comic rays - bold alternating
+  cxSun.save();
+  cxSun.translate(W*.5,-H*.05);
+  var rayCount=24;
+  for(var i=0;i<rayCount;i++){
+    var a1=(i/rayCount)*Math.PI*2+sunAngle;
+    var a2=((i+.5)/rayCount)*Math.PI*2+sunAngle;
+    var len=H*2.5;
+    cxSun.beginPath();
+    cxSun.moveTo(0,0);
+    cxSun.lineTo(Math.cos(a1)*len,Math.sin(a1)*len);
+    cxSun.lineTo(Math.cos(a2)*len,Math.sin(a2)*len);
+    cxSun.closePath();
+    cxSun.fillStyle=i%2===0?'rgba(255,248,180,.18)':'rgba(255,220,60,.08)';
+    cxSun.fill();
+  }
+  cxSun.restore();
+  
+  // Comic halftone dots near center
+  cxSun.save();
+  cxSun.globalAlpha=.06;
+  for(var dx=0;dx<W;dx+=12){
+    for(var dy=0;dy<H;dy+=12){
+      var dist=Math.sqrt((dx-W*.5)*(dx-W*.5)+(dy+H*.05)*(dy+H*.05));
+      var r=Math.max(0,3-dist/(H*.4)*3);
+      if(r>0.3){
+        cxSun.beginPath();
+        cxSun.arc(dx,dy,r,0,Math.PI*2);
+        cxSun.fillStyle='#000';
+        cxSun.fill();
+      }
+    }
+  }
+  cxSun.restore();
+  
+  sunAngle+=0.0008;
+}
+
+// Draw holes in camo (where patches have fallen)
+function drawHoles(){
+  // Fill entire screen with camo color, then cut out holes
+  cxHoles.clearRect(0,0,W,H);
+  cxHoles.fillStyle='#1a1f12';
+  cxHoles.fillRect(0,0,W,H);
+  
+  // Cut out fallen patches to reveal sun beneath
+  cxHoles.globalCompositeOperation='destination-out';
+  patches.forEach(function(p){
+    if(!p.falling&&!p.fallen)return;
+    // Reveal this spot
+    var progress=p.fallen?1:Math.min(1,p.ft*2);
+    cxHoles.save();
+    cxHoles.translate(p.ox,p.oy);
+    cxHoles.globalAlpha=progress;
+    makePath(cxHoles,p.pts);
+    cxHoles.fill();
+    cxHoles.restore();
+  });
+  cxHoles.globalCompositeOperation='source-over';
+}
+
+// Draw falling leaves
+function drawLeaves(){
+  cxLeaves.clearRect(0,0,W,H);
+  patches.forEach(function(p){
+    if(!p.falling||p.fallen)return;
+    cxLeaves.save();
+    cxLeaves.translate(p.x,p.y);
+    cxLeaves.rotate(p.rot);
+    cxLeaves.globalAlpha=p.alpha;
+    
+    makePath(cxLeaves,p.pts);
+    cxLeaves.fillStyle=p.col;
+    cxLeaves.fill();
+    
+    // Comic outline on falling leaves
+    cxLeaves.strokeStyle='rgba(10,10,5,.5)';
+    cxLeaves.lineWidth=2;
+    cxLeaves.stroke();
+    
+    cxLeaves.restore();
+  });
+}
+
+var startTime=Date.now();
+function update(){
+  var elapsed=(Date.now()-startTime)/1000;
+  
+  patches.forEach(function(p){
+    if(p.fallen)return;
+    if(!p.falling&&elapsed>p.delay){
+      p.falling=true;
+      p.ft=0;
+    }
+    if(p.falling){
+      p.ft+=1/60;
+      // Leaf physics: gravity + sway + wobble
+      p.y=p.oy+p.ft*p.fs+p.ft*p.ft*20;
+      p.x=p.ox+Math.sin(p.ft*p.sf+p.phase)*p.sa;
+      p.rot+=p.rs*(1/60);
+      p.alpha=Math.max(0,1-p.ft*.25);
+      if(p.y>H+120||p.alpha<=0){
+        p.fallen=true;
+      }
+    }
+  });
+}
+
+function frame(){
+  update();
+  drawSun();
+  drawHoles();
+  drawLeaves();
+  requestAnimationFrame(frame);
+}
+
+function init(){
+  resize();
+  genPatches();
+  paintCamo();
+  frame();
+}
+
+window.addEventListener('resize',function(){
+  resize();
+  genPatches();
+  paintCamo();
+  startTime=Date.now();
+});
+
+init();
+</script>
 </body>
 </html>
