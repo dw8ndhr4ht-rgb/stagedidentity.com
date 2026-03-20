@@ -1,1 +1,661 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zugvögel — Staged Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+:root {
+  --rosa-light: #fce4ec;
+  --rosa-mid: #f8bbd0;
+  --rosa-deep: #f48fb1;
+  --rosa-accent: #ec407a;
+  --lavender: #e1bee7;
+  --mint: #b2dfdb;
+  --peach: #ffe0b2;
+  --sky: #b3e5fc;
+  --dark: #1a1a2e;
+  --dark-mid: #16213e;
+  --dark-light: #0f3460;
+  --text-secondary: #6b6b80;
+  --glass-border: rgba(255, 255, 255, 0.12);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #1a1a2e 100%);
+  color: var(--rosa-light);
+}
+
+.grid-bg {
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(244,143,177,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244,143,177,0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: 0;
+}
+
+/* HEADER */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(26, 26, 46, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+}
+.header-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--rosa-deep);
+}
+.header-title span { color: var(--rosa-accent); text-shadow: 0 0 20px rgba(236,64,122,0.5); }
+.header-subtitle {
+  font-size: 10px; color: var(--text-secondary);
+  letter-spacing: 1px; font-family: 'Space Mono', monospace;
+}
+.back-link {
+  color: var(--rosa-mid); text-decoration: none;
+  font-family: 'Space Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; opacity: 0.7; transition: all 0.3s;
+}
+.back-link:hover { opacity: 1; color: var(--rosa-accent); }
+
+/* MAP */
+.map-container {
+  position: fixed; top: 56px; left: 0; right: 260px; bottom: 110px;
+  z-index: 1; overflow: hidden;
+}
+#map-svg { width: 100%; height: 100%; }
+.land { fill: rgba(30, 30, 50, 0.9); stroke: rgba(244,143,177,0.18); stroke-width: 0.4; }
+.land:hover { fill: rgba(244,143,177,0.07); }
+.graticule { fill: none; stroke: rgba(244,143,177,0.04); stroke-width: 0.3; }
+.sphere-outline { fill: none; stroke: rgba(244,143,177,0.1); stroke-width: 0.5; }
+
+.zoom-controls {
+  position: absolute; top: 12px; left: 12px;
+  display: flex; flex-direction: column; gap: 4px; z-index: 10;
+}
+.zoom-btn {
+  background: rgba(26,26,46,0.85); backdrop-filter: blur(8px);
+  border: 1px solid rgba(244,143,177,0.2); color: var(--rosa-accent);
+  width: 30px; height: 30px; border-radius: 6px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700;
+  transition: all 0.2s;
+}
+.zoom-btn:hover { background: rgba(244,143,177,0.15); border-color: var(--rosa-deep); }
+.zoom-btn.reset { font-size: 10px; }
+
+.route-line {
+  fill: none; stroke-width: 1.2; stroke-linecap: round;
+  stroke-dasharray: 5 3; opacity: 0;
+  transition: opacity 0.4s, stroke-width 0.3s;
+}
+.route-line.visible { opacity: 0.35; }
+.route-line.highlighted { opacity: 0.9; stroke-width: 2; filter: drop-shadow(0 0 4px currentColor); }
+
+.stop-circle {
+  opacity: 0; transition: opacity 0.4s; cursor: pointer;
+}
+.stop-circle.visible { opacity: 0.8; }
+.stop-circle:hover { opacity: 1; }
+
+.bird-marker { transition: all 0.15s; }
+
+/* TOOLTIP */
+.tooltip {
+  position: fixed;
+  background: rgba(26,26,46,0.95); backdrop-filter: blur(12px);
+  border: 1px solid var(--rosa-deep); border-radius: 6px;
+  padding: 8px 12px; font-size: 11px;
+  pointer-events: none; z-index: 200; opacity: 0;
+  transition: opacity 0.15s; max-width: 200px;
+  box-shadow: 0 4px 16px rgba(236,64,122,0.2);
+}
+.tooltip.visible { opacity: 1; }
+.tooltip-name { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--rosa-accent); font-size: 12px; margin-bottom: 2px; }
+.tooltip-detail { color: var(--rosa-light); line-height: 1.3; }
+
+/* BIRD PANEL */
+.bird-panel {
+  position: fixed; top: 56px; right: 0; bottom: 110px;
+  z-index: 100; width: 260px;
+  background: rgba(26,26,46,0.6); backdrop-filter: blur(12px);
+  border-left: 1px solid var(--glass-border);
+  overflow-y: auto; padding: 12px 10px;
+  scrollbar-width: thin; scrollbar-color: var(--rosa-deep) transparent;
+}
+.panel-title {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 10px; padding: 0 4px;
+}
+.bird-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; padding: 9px 10px; margin-bottom: 5px;
+  cursor: pointer; transition: all 0.25s;
+  display: flex; align-items: center; gap: 9px;
+}
+.bird-card:hover, .bird-card.active {
+  border-color: var(--rosa-deep);
+  background: rgba(244,143,177,0.06);
+}
+.bird-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+.bird-name { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; }
+.bird-latin { font-size: 9px; color: var(--text-secondary); font-style: italic; }
+.bird-status { font-size: 9px; color: var(--rosa-mid); margin-top: 1px; font-family: 'Space Mono', monospace; }
+
+/* TIMELINE */
+.timeline {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(26,26,46,0.9); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  padding: 10px 24px 14px;
+}
+.timeline-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.timeline-date {
+  font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700;
+  color: var(--rosa-accent); text-shadow: 0 0 16px rgba(236,64,122,0.4);
+}
+.timeline-label {
+  font-size: 10px; color: var(--text-secondary);
+  letter-spacing: 2px; text-transform: uppercase;
+  font-family: 'Space Mono', monospace;
+}
+.controls { display: flex; gap: 6px; align-items: center; }
+.ctrl-btn {
+  background: rgba(244,143,177,0.1); border: 1px solid rgba(244,143,177,0.25);
+  color: var(--rosa-accent); width: 28px; height: 28px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; transition: all 0.2s;
+}
+.ctrl-btn:hover { background: rgba(244,143,177,0.25); }
+.speed-label {
+  font-family: 'Space Mono', monospace; font-size: 9px;
+  color: var(--text-secondary); min-width: 28px; text-align: center;
+}
+
+.slider-wrap { position: relative; height: 32px; display: flex; align-items: center; }
+.slider-track { position: absolute; width: 100%; height: 3px; background: rgba(244,143,177,0.12); border-radius: 2px; }
+.slider-fill { position: absolute; height: 3px; background: linear-gradient(90deg, var(--rosa-deep), var(--rosa-accent)); border-radius: 2px; pointer-events: none; }
+.month-ticks {
+  position: absolute; width: 100%; display: flex; justify-content: space-between;
+  bottom: -2px; padding: 0 2px; pointer-events: none;
+}
+.mtick { text-align: center; }
+.mtick .dot { width: 3px; height: 3px; border-radius: 50%; background: rgba(244,143,177,0.2); margin: 0 auto 2px; }
+.mtick.active .dot { background: var(--rosa-accent); box-shadow: 0 0 4px rgba(236,64,122,0.5); }
+.mtick .ml { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text-secondary); }
+.mtick.active .ml { color: var(--rosa-accent); }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  position: absolute; width: 100%; height: 32px;
+  background: transparent; cursor: pointer; z-index: 10;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--rosa-accent);
+  box-shadow: 0 0 12px rgba(236,64,122,0.6);
+  border: 2px solid var(--rosa-light);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--rosa-accent);
+  box-shadow: 0 0 12px rgba(236,64,122,0.6);
+  border: 2px solid var(--rosa-light);
+}
+
+/* LOADING */
+.loading {
+  position: fixed; inset: 0; z-index: 999;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.6s;
+}
+.loading.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 40px; height: 40px; border: 2px solid rgba(244,143,177,0.15);
+  border-top-color: var(--rosa-accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: 'Space Mono', monospace; color: var(--rosa-deep);
+  font-size: 11px; letter-spacing: 3px; margin-top: 16px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .bird-panel { display: none; }
+  .map-container { right: 0; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Lade Kartendaten...</div>
+</div>
+
+<div class="grid-bg"></div>
+
+<div class="header">
+  <div>
+    <div class="header-title">Zug<span>vögel</span> // Migration Tracker</div>
+    <div class="header-subtitle">Echtzeit-Zugrouten europäischer Vögel</div>
+  </div>
+  <a href="/" class="back-link">← stagedidentity.com</a>
+</div>
+
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-name" id="ttName"></div>
+  <div class="tooltip-detail" id="ttDetail"></div>
+</div>
+
+<div class="bird-panel" id="birdPanel">
+  <div class="panel-title">Arten &amp; Position</div>
+</div>
+
+<div class="map-container" id="mapContainer">
+  <div class="zoom-controls">
+    <button class="zoom-btn" id="zoomIn" title="Reinzoomen">+</button>
+    <button class="zoom-btn" id="zoomOut" title="Rauszoomen">−</button>
+    <button class="zoom-btn reset" id="zoomReset" title="Ansicht zurücksetzen">⟳</button>
+  </div>
+  <svg id="map-svg"></svg>
+</div>
+
+<div class="timeline">
+  <div class="timeline-top">
+    <div>
+      <div class="timeline-date" id="dateDisplay">20. März 2026</div>
+      <div class="timeline-label">Zugvogelkalender</div>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn" id="playBtn" title="Abspielen">▶</button>
+      <button class="ctrl-btn" id="speedBtn" title="Geschwindigkeit">⏩</button>
+      <span class="speed-label" id="speedLabel">1×</span>
+    </div>
+  </div>
+  <div class="slider-wrap">
+    <div class="slider-track"></div>
+    <div class="slider-fill" id="sliderFill"></div>
+    <input type="range" id="slider" min="0" max="365" value="79">
+    <div class="month-ticks" id="monthTicks"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+const MONTHS_FULL = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+const birds = [
+  {
+    id:'storch', name:'Weißstorch', latin:'Ciconia ciconia', color:'#f48fb1',
+    route:[
+      {loc:'Südafrika',lon:28,lat:-28,m:0},
+      {loc:'Tansania',lon:35,lat:-6,m:1.5},
+      {loc:'Kenia / Rift Valley',lon:36,lat:0,m:2},
+      {loc:'Sudan / Niltal',lon:32,lat:15,m:2.5},
+      {loc:'Ägypten / Suez',lon:32,lat:30,m:3},
+      {loc:'Israel / Hula-Tal',lon:35,lat:33,m:3.2},
+      {loc:'Türkei / Bosporus',lon:29,lat:41,m:3.5},
+      {loc:'Bulgarien',lon:25,lat:43,m:3.8},
+      {loc:'Brandenburg',lon:13,lat:52,m:4},
+      {loc:'Norddeutschland',lon:10,lat:54,m:4.5},
+      {loc:'Brutgebiet',lon:12,lat:53,m:5},{loc:'Brutgebiet',lon:12,lat:53,m:7},
+      {loc:'Türkei',lon:29,lat:41,m:8.5},
+      {loc:'Israel',lon:35,lat:33,m:9},
+      {loc:'Sudan',lon:32,lat:15,m:10},
+      {loc:'Tansania',lon:35,lat:-6,m:11},
+      {loc:'Südafrika',lon:28,lat:-28,m:12}
+    ]
+  },
+  {
+    id:'kranich', name:'Kranich', latin:'Grus grus', color:'#ce93d8',
+    route:[
+      {loc:'Extremadura',lon:-6,lat:39,m:0},
+      {loc:'Südfrankreich',lon:2,lat:44,m:1.5},
+      {loc:'Champagne',lon:4,lat:48,m:2.5},
+      {loc:'Rügen',lon:13,lat:54,m:3},
+      {loc:'Hornborgasjön',lon:14,lat:58,m:3.5},
+      {loc:'Finnland',lon:26,lat:64,m:4.5},
+      {loc:'Nordskandinav.',lon:20,lat:66,m:5},
+      {loc:'Nordskandinav.',lon:20,lat:66,m:7.5},
+      {loc:'Schweden',lon:14,lat:58,m:8},
+      {loc:'Rügen',lon:13,lat:54,m:9},
+      {loc:'Champagne',lon:4,lat:48,m:10},
+      {loc:'Extremadura',lon:-6,lat:39,m:11},
+      {loc:'Extremadura',lon:-6,lat:39,m:12}
+    ]
+  },
+  {
+    id:'schwalbe', name:'Rauchschwalbe', latin:'Hirundo rustica', color:'#80cbc4',
+    route:[
+      {loc:'Kapregion',lon:18,lat:-34,m:0},
+      {loc:'Namibia',lon:18,lat:-22,m:1},
+      {loc:'Kongo-Becken',lon:20,lat:-4,m:2},
+      {loc:'Nigeria',lon:8,lat:9,m:2.5},
+      {loc:'Sahara',lon:2,lat:22,m:3},
+      {loc:'Marokko',lon:-5,lat:33,m:3.3},
+      {loc:'Gibraltar',lon:-5,lat:36,m:3.5},
+      {loc:'Frankreich',lon:2,lat:46,m:4},
+      {loc:'England',lon:-1,lat:52,m:4.5},
+      {loc:'Brutgebiet',lon:5,lat:51,m:5},{loc:'Brutgebiet',lon:5,lat:51,m:7.5},
+      {loc:'Südfrankreich',lon:2,lat:44,m:8.5},
+      {loc:'Gibraltar',lon:-5,lat:36,m:9.5},
+      {loc:'Marokko',lon:-5,lat:33,m:10},
+      {loc:'Nigeria',lon:8,lat:9,m:11},
+      {loc:'Kapregion',lon:18,lat:-34,m:12}
+    ]
+  },
+  {
+    id:'kuckuck', name:'Kuckuck', latin:'Cuculus canorus', color:'#ffab91',
+    route:[
+      {loc:'Kongo-Becken',lon:22,lat:-2,m:0},
+      {loc:'Zentralafrika',lon:20,lat:5,m:1.5},
+      {loc:'Tschad',lon:18,lat:12,m:2.5},
+      {loc:'Sahara',lon:10,lat:25,m:3},
+      {loc:'Sizilien',lon:14,lat:38,m:3.5},
+      {loc:'Österreich',lon:14,lat:47,m:4},
+      {loc:'Deutschland',lon:10,lat:51,m:4.5},
+      {loc:'Skandinavien',lon:12,lat:60,m:5},
+      {loc:'Skandinavien',lon:12,lat:60,m:6.5},
+      {loc:'Norditalien',lon:12,lat:45,m:7},
+      {loc:'Griechenland',lon:22,lat:38,m:8},
+      {loc:'Ägypten',lon:30,lat:28,m:9},
+      {loc:'Sudan',lon:30,lat:15,m:10},
+      {loc:'Kongo',lon:22,lat:-2,m:11.5},
+      {loc:'Kongo-Becken',lon:22,lat:-2,m:12}
+    ]
+  },
+  {
+    id:'fischadler', name:'Fischadler', latin:'Pandion haliaetus', color:'#90caf9',
+    route:[
+      {loc:'Gambia',lon:-16,lat:13,m:0},
+      {loc:'Mauretanien',lon:-12,lat:20,m:1.5},
+      {loc:'Marokko',lon:-6,lat:32,m:2.5},
+      {loc:'Spanien',lon:-4,lat:38,m:3},
+      {loc:'Frankreich',lon:2,lat:47,m:3.5},
+      {loc:'Schottland',lon:-4,lat:57,m:4},
+      {loc:'Schweden',lon:16,lat:60,m:4.5},
+      {loc:'Brutgebiet',lon:16,lat:60,m:5},{loc:'Brutgebiet',lon:16,lat:60,m:7.5},
+      {loc:'Nordsee',lon:4,lat:55,m:8},
+      {loc:'Frankreich',lon:0,lat:45,m:9},
+      {loc:'Spanien',lon:-4,lat:38,m:9.5},
+      {loc:'Marokko',lon:-6,lat:32,m:10},
+      {loc:'Gambia',lon:-16,lat:13,m:11},
+      {loc:'Gambia',lon:-16,lat:13,m:12}
+    ]
+  },
+  {
+    id:'nachtigall', name:'Nachtigall', latin:'Luscinia megarhynchos', color:'#fff59d',
+    route:[
+      {loc:'Senegal',lon:-14,lat:14,m:0},
+      {loc:'Mali / Sahel',lon:-4,lat:15,m:1.5},
+      {loc:'Sahara',lon:0,lat:26,m:2.5},
+      {loc:'Atlas',lon:-5,lat:33,m:3},
+      {loc:'Andalusien',lon:-4,lat:37,m:3.3},
+      {loc:'Südfrankreich',lon:4,lat:44,m:3.8},
+      {loc:'Deutschland',lon:10,lat:50,m:4.2},
+      {loc:'Polen',lon:20,lat:52,m:4.5},
+      {loc:'Brutgebiet',lon:15,lat:51,m:5},{loc:'Brutgebiet',lon:15,lat:51,m:7.5},
+      {loc:'Südeuropa',lon:4,lat:42,m:9},
+      {loc:'Nordafrika',lon:0,lat:34,m:10},
+      {loc:'Sahel',lon:-4,lat:15,m:11},
+      {loc:'Senegal',lon:-14,lat:14,m:12}
+    ]
+  },
+  {
+    id:'wespenbussard', name:'Wespenbussard', latin:'Pernis apivorus', color:'#a5d6a7',
+    route:[
+      {loc:'Kamerun',lon:12,lat:5,m:0},
+      {loc:'Nigeria',lon:8,lat:9,m:1.5},
+      {loc:'Sahel',lon:6,lat:15,m:2.5},
+      {loc:'Sahara',lon:8,lat:28,m:3},
+      {loc:'Tunesien',lon:10,lat:35,m:3.3},
+      {loc:'Messina',lon:15,lat:38,m:3.5},
+      {loc:'Italien',lon:12,lat:43,m:4},
+      {loc:'Alpen',lon:10,lat:47,m:4.3},
+      {loc:'Deutschland',lon:10,lat:52,m:5},
+      {loc:'Deutschland',lon:10,lat:52,m:7.5},
+      {loc:'Italien',lon:12,lat:42,m:8.5},
+      {loc:'Messina',lon:15,lat:38,m:9},
+      {loc:'Tunesien',lon:10,lat:35,m:9.5},
+      {loc:'Sahara',lon:8,lat:22,m:10},
+      {loc:'Kamerun',lon:12,lat:5,m:11.5},
+      {loc:'Kamerun',lon:12,lat:5,m:12}
+    ]
+  }
+];
+
+// ===== MAP SETUP =====
+const mapSvg = d3.select('#map-svg');
+const container = document.getElementById('mapContainer');
+let width, height, projection, pathGen;
+
+function initProjection() {
+  width = container.clientWidth;
+  height = container.clientHeight;
+  // Scale to show Europe + Africa nicely — lower = more zoomed out
+  projection = d3.geoNaturalEarth1()
+    .center([15, 15])
+    .scale(Math.min(width, height) * 0.55)
+    .translate([width / 2, height / 2]);
+  pathGen = d3.geoPath().projection(projection);
+  mapSvg.attr('width', width).attr('height', height);
+}
+initProjection();
+
+// All map layers inside one zoom group
+const zoomGroup = mapSvg.append('g').attr('id', 'zoom-group');
+const gratLayer = zoomGroup.append('g');
+const landLayer = zoomGroup.append('g');
+const routeLayer = zoomGroup.append('g');
+const stopLayer = zoomGroup.append('g');
+const birdLayer = zoomGroup.append('g');
+
+// D3 Zoom — scroll to zoom, drag to pan
+const zoom = d3.zoom()
+  .scaleExtent([0.5, 12])
+  .on('zoom', (event) => {
+    zoomGroup.attr('transform', event.transform);
+  });
+mapSvg.call(zoom);
+
+// Zoom button handlers
+document.getElementById('zoomIn').addEventListener('click', () => {
+  mapSvg.transition().duration(300).call(zoom.scaleBy, 1.5);
+});
+document.getElementById('zoomOut').addEventListener('click', () => {
+  mapSvg.transition().duration(300).call(zoom.scaleBy, 0.67);
+});
+document.getElementById('zoomReset').addEventListener('click', () => {
+  mapSvg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+});
+
+// Graticule
+const grat = d3.geoGraticule().step([15, 15]);
+gratLayer.append('path').datum(grat()).attr('d', pathGen).attr('class', 'graticule');
+gratLayer.append('path').datum({type:'Sphere'}).attr('d', pathGen).attr('class', 'sphere-outline');
+
+// ===== LOAD WORLD =====
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+  const countries = topojson.feature(world, world.objects.countries);
+  landLayer.selectAll('path').data(countries.features).join('path').attr('d', pathGen).attr('class', 'land');
+  initBirds();
+  document.getElementById('loading').classList.add('hidden');
+}).catch(() => {
+  document.querySelector('.loading-text').textContent = 'Kartenfehler — bitte neu laden';
+});
+
+function initBirds() {
+  const lineGen = d3.line()
+    .x(d => projection([d.lon, d.lat])[0])
+    .y(d => projection([d.lon, d.lat])[1])
+    .curve(d3.curveCatmullRom.alpha(0.5));
+
+  birds.forEach(bird => {
+    routeLayer.append('path').datum(bird.route).attr('d', lineGen)
+      .attr('class', 'route-line').attr('stroke', bird.color).attr('data-bird', bird.id);
+
+    bird.route.forEach((s, i) => {
+      const [cx, cy] = projection([s.lon, s.lat]);
+      stopLayer.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 2.5)
+        .attr('fill', bird.color).attr('class', 'stop-circle')
+        .attr('data-bird', bird.id).attr('data-idx', i)
+        .on('mouseenter', e => showTip(e, bird.name, `${s.loc} — ${MONTHS_FULL[Math.min(11, Math.floor(s.m))]}`))
+        .on('mouseleave', hideTip);
+    });
+
+    const g = birdLayer.append('g').attr('class', 'bird-marker').attr('data-bird', bird.id);
+    g.append('circle').attr('r', 7).attr('fill', bird.color).attr('opacity', 0.18);
+    g.append('circle').attr('r', 3.5).attr('fill', bird.color).attr('stroke', '#fff').attr('stroke-width', 0.6);
+  });
+
+  buildPanel();
+  buildTicks();
+  update(79);
+  slider.addEventListener('input', () => update());
+}
+
+// ===== PANEL =====
+const panel = document.getElementById('birdPanel');
+let activeBird = null;
+
+function buildPanel() {
+  birds.forEach(b => {
+    const c = document.createElement('div');
+    c.className = 'bird-card'; c.dataset.bird = b.id;
+    c.innerHTML = `<div class="bird-dot" style="background:${b.color};color:${b.color}"></div>
+      <div><div class="bird-name">${b.name}</div><div class="bird-latin">${b.latin}</div>
+      <div class="bird-status" id="st-${b.id}">—</div></div>`;
+    c.onclick = () => { activeBird = activeBird === b.id ? null : b.id; update(); };
+    panel.appendChild(c);
+  });
+}
+
+// ===== TICKS =====
+function buildTicks() {
+  const el = document.getElementById('monthTicks');
+  MONTHS_SHORT.forEach(m => {
+    const d = document.createElement('div'); d.className = 'mtick';
+    d.innerHTML = `<div class="dot"></div><div class="ml">${m}</div>`;
+    el.appendChild(d);
+  });
+}
+
+// ===== INTERPOLATION =====
+function birdPos(bird, day) {
+  const mf = (day / 365) * 12;
+  let si = 0;
+  for (let i = 0; i < bird.route.length - 1; i++) {
+    if (mf >= bird.route[i].m && mf <= bird.route[i + 1].m) { si = i; break; }
+    if (i === bird.route.length - 2) si = i;
+  }
+  const a = bird.route[si], b = bird.route[si + 1] || a;
+  const seg = b.m - a.m, t = seg > 0 ? Math.max(0, Math.min(1, (mf - a.m) / seg)) : 0;
+  return { lon: a.lon + (b.lon - a.lon) * t, lat: a.lat + (b.lat - a.lat) * t, from: a.loc, to: b.loc, t };
+}
+
+// ===== UPDATE =====
+const slider = document.getElementById('slider');
+
+function update(dayO) {
+  const day = dayO !== undefined ? dayO : parseInt(slider.value);
+  if (dayO !== undefined) slider.value = day;
+  const mf = (day / 365) * 12, mi = Math.min(11, Math.floor(mf)), dm = Math.floor((mf - mi) * 30) + 1;
+
+  document.getElementById('dateDisplay').textContent = `${dm}. ${MONTHS_FULL[mi]} 2026`;
+  document.getElementById('sliderFill').style.width = (day / 365 * 100) + '%';
+  document.querySelectorAll('.mtick').forEach((t, i) => t.classList.toggle('active', i <= mi));
+
+  birds.forEach(bird => {
+    const p = birdPos(bird, day), [bx, by] = projection([p.lon, p.lat]), hl = activeBird === bird.id;
+    birdLayer.select(`[data-bird="${bird.id}"]`).attr('transform', `translate(${bx},${by})`);
+    routeLayer.select(`[data-bird="${bird.id}"]`).classed('visible', true).classed('highlighted', hl);
+
+    stopLayer.selectAll(`[data-bird="${bird.id}"]`).each(function() {
+      const sm = bird.route[+this.dataset.idx].m, reached = sm <= mf;
+      d3.select(this).classed('visible', reached || hl)
+        .attr('r', hl && reached ? 3.5 : 2.5)
+        .attr('opacity', hl ? (reached ? 1 : 0.3) : reached ? 0.7 : 0);
+    });
+
+    panel.querySelector(`[data-bird="${bird.id}"]`).classList.toggle('active', hl);
+    const st = document.getElementById(`st-${bird.id}`);
+    st.textContent = p.t < 0.1 ? `📍 ${p.from}` : p.t > 0.9 ? `📍 ${p.to}` : `→ ${p.to}`;
+  });
+}
+
+// ===== TOOLTIP =====
+const tip = document.getElementById('tooltip');
+function showTip(e, n, d) {
+  document.getElementById('ttName').textContent = n;
+  document.getElementById('ttDetail').textContent = d;
+  tip.classList.add('visible');
+  tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY - 10) + 'px';
+}
+function hideTip() { tip.classList.remove('visible'); }
+document.addEventListener('mousemove', e => {
+  if (tip.classList.contains('visible')) {
+    tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY - 10) + 'px';
+  }
+});
+
+// ===== PLAY =====
+let playing = false, timer;
+const speeds = [1, 2, 4]; let si = 0;
+
+document.getElementById('playBtn').addEventListener('click', function() {
+  playing = !playing; this.textContent = playing ? '⏸' : '▶';
+  if (playing) startPlay(); else clearInterval(timer);
+});
+function startPlay() {
+  clearInterval(timer);
+  timer = setInterval(() => { slider.value = (parseInt(slider.value) + 1) % 366; update(); }, 50 / speeds[si]);
+}
+document.getElementById('speedBtn').addEventListener('click', () => {
+  si = (si + 1) % speeds.length;
+  document.getElementById('speedLabel').textContent = speeds[si] + '×';
+  if (playing) startPlay();
+});
+
+// ===== RESIZE =====
+window.addEventListener('resize', () => {
+  initProjection();
+  gratLayer.select('.graticule').attr('d', pathGen(grat()));
+  gratLayer.select('.sphere-outline').attr('d', pathGen({type:'Sphere'}));
+  landLayer.selectAll('path').attr('d', pathGen);
+
+  const lineGen = d3.line().x(d => projection([d.lon, d.lat])[0]).y(d => projection([d.lon, d.lat])[1]).curve(d3.curveCatmullRom.alpha(0.5));
+  birds.forEach(b => {
+    routeLayer.select(`[data-bird="${b.id}"]`).attr('d', lineGen(b.route));
+    b.route.forEach((s, i) => {
+      const [cx, cy] = projection([s.lon, s.lat]);
+      stopLayer.select(`[data-bird="${b.id}"][data-idx="${i}"]`).attr('cx', cx).attr('cy', cy);
+    });
+  });
+  update();
+});
+</script>
+</body>
+</html>
