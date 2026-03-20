@@ -5,117 +5,155 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Staged Identity</title>
 <style>
-/* No external fonts — system serif stacks */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-body{background:#1a1f12;overflow:hidden;height:100vh;width:100vw}
-#camo-static{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0}
-#sun{position:fixed;top:0;left:0;right:0;bottom:0;z-index:1}
-#leaves{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none}
-#holes{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3}
-#camo-static canvas,#sun canvas,#leaves canvas,#holes canvas{width:100%;height:100%}
-.center-ui{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:none}
+body{background:#0e120a;overflow:hidden;height:100vh;width:100vw}
+canvas{display:block}
+#layer-camo,#layer-sun,#layer-depth,#layer-leaves,#layer-holes,#layer-atmos{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+}
+#layer-camo{z-index:0}
+#layer-sun{z-index:1;mix-blend-mode:screen}
+#layer-holes{z-index:3}
+#layer-leaves{z-index:4;pointer-events:none}
+#layer-depth{z-index:5;pointer-events:none}
+#layer-atmos{z-index:6;pointer-events:none}
 
+.center-ui{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:20;pointer-events:none;
+}
 .btn-row{
-  display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;
+  display:flex;align-items:center;gap:40px;flex-wrap:wrap;justify-content:center;
 }
 
+/* Iran button */
 .iran-btn{
   pointer-events:all;text-decoration:none;position:relative;
   display:flex;align-items:center;justify-content:center;
-  padding:24px 56px;
-  background:#1a1f12;
-  border:4px solid #0e1209;
-  box-shadow:6px 6px 0 #0e1209;
-  transition:all .2s;
+  padding:22px 52px;
+  background:linear-gradient(160deg,#232e16 0%,#161c0f 60%,#0f1309 100%);
+  border:2px solid #4a5c28;
+  box-shadow:
+    0 0 0 1px #0a0e06,
+    4px 4px 16px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(180,200,80,.12),
+    0 0 32px rgba(200,180,40,.06);
+  transition:all .18s ease;
   cursor:pointer;
 }
+.iran-btn::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(180,200,80,.07) 0%,transparent 55%);
+  pointer-events:none;
+}
 .iran-btn:hover{
-  transform:translate(-3px,-3px);
-  box-shadow:9px 9px 0 #0e1209;
-  background:#222a16;
+  transform:translate(-2px,-3px);
+  box-shadow:
+    0 0 0 1px #0a0e06,
+    6px 8px 24px rgba(0,0,0,.75),
+    inset 0 1px 0 rgba(220,240,100,.18),
+    0 0 48px rgba(220,200,50,.1);
+  border-color:#6a8038;
+  background:linear-gradient(160deg,#2a3818 0%,#1a2410 60%,#111509 100%);
 }
 .iran-btn:active{
-  transform:translate(3px,3px);
-  box-shadow:3px 3px 0 #0e1209;
+  transform:translate(2px,2px);
+  box-shadow:2px 2px 8px rgba(0,0,0,.7),inset 0 1px 0 rgba(0,0,0,.3);
 }
 .btn-text{
   font-family:Georgia,'Times New Roman',serif;
-  font-size:56px;
-  font-weight:900;
-  font-style:italic;
-  color:#f0d848;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  text-shadow:3px 3px 0 #0e1209,-1px -1px 0 #0e1209,1px -1px 0 #0e1209,-1px 1px 0 #0e1209;
+  font-size:58px;font-weight:900;font-style:italic;
+  color:#e8d040;
+  letter-spacing:.04em;text-transform:uppercase;
+  text-shadow:
+    0 0 40px rgba(240,210,40,.35),
+    2px 2px 0 #0a0d06,
+    0 1px 8px rgba(0,0,0,.6);
+  -webkit-font-smoothing:antialiased;
 }
 .btn-sub{
-  position:absolute;
-  bottom:-28px;
+  position:absolute;bottom:-26px;
   font-family:Georgia,'Times New Roman',serif;
-  font-size:14px;
-  font-weight:700;
-  letter-spacing:.25em;
-  text-transform:uppercase;
-  color:#8a9a5a;
-  text-shadow:2px 2px 0 #0e1209;
+  font-size:11px;font-weight:700;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:#6a8040;
+  text-shadow:1px 1px 4px rgba(0,0,0,.8);
 }
 
-/* Zugvogel Button */
+/* Zugvogel button */
 .zugvogel-btn{
   pointer-events:all;text-decoration:none;position:relative;
   display:flex;align-items:center;justify-content:center;
-  padding:24px 48px;
-  background:rgba(26,26,46,0.85);
-  border:3px solid rgba(244,143,177,0.4);
-  box-shadow:6px 6px 0 rgba(20,20,35,0.8);
-  transition:all .2s;
+  padding:22px 44px;
+  background:linear-gradient(160deg,rgba(28,18,44,.92) 0%,rgba(16,10,28,.95) 70%);
+  border:2px solid rgba(200,100,160,.35);
+  box-shadow:
+    0 0 0 1px rgba(10,5,20,.8),
+    4px 4px 16px rgba(0,0,0,.7),
+    inset 0 1px 0 rgba(240,160,200,.1),
+    0 0 32px rgba(200,80,140,.06);
+  transition:all .18s ease;
   cursor:pointer;
-  backdrop-filter:blur(4px);
+  backdrop-filter:blur(6px);
+}
+.zugvogel-btn::before{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(240,160,200,.07) 0%,transparent 55%);
+  pointer-events:none;
 }
 .zugvogel-btn:hover{
-  transform:translate(-3px,-3px);
-  box-shadow:9px 9px 0 rgba(20,20,35,0.8);
-  background:rgba(40,30,55,0.9);
-  border-color:rgba(244,143,177,0.7);
+  transform:translate(-2px,-3px);
+  box-shadow:
+    0 0 0 1px rgba(10,5,20,.8),
+    6px 8px 24px rgba(0,0,0,.75),
+    inset 0 1px 0 rgba(255,180,220,.18),
+    0 0 48px rgba(220,80,160,.12);
+  border-color:rgba(240,130,190,.6);
+  background:linear-gradient(160deg,rgba(40,22,58,.95) 0%,rgba(24,14,40,.97) 70%);
 }
 .zugvogel-btn:active{
-  transform:translate(3px,3px);
-  box-shadow:3px 3px 0 rgba(20,20,35,0.8);
+  transform:translate(2px,2px);
+  box-shadow:2px 2px 8px rgba(0,0,0,.7);
 }
 .zv-text{
   font-family:Georgia,'Times New Roman',serif;
-  font-size:48px;
-  font-style:italic;
-  color:#f8bbd0;
+  font-size:48px;font-style:italic;
+  color:#f0b0ce;
   letter-spacing:.04em;
-  text-shadow:2px 2px 0 rgba(20,20,35,0.9),0 0 30px rgba(236,64,122,0.3);
+  text-shadow:
+    0 0 40px rgba(230,80,150,.3),
+    2px 2px 0 rgba(10,4,18,.9),
+    0 1px 8px rgba(0,0,0,.6);
+  -webkit-font-smoothing:antialiased;
 }
 .zv-sub{
-  position:absolute;
-  bottom:-26px;
+  position:absolute;bottom:-26px;
   font-family:Georgia,'Times New Roman',serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.3em;
-  text-transform:uppercase;
-  color:rgba(244,143,177,0.5);
-  text-shadow:1px 1px 0 rgba(20,20,35,0.9);
+  font-size:11px;font-weight:700;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(220,130,180,.5);
+  text-shadow:1px 1px 4px rgba(0,0,0,.8);
 }
 
 @media(max-width:680px){
-  .btn-row{flex-direction:column;gap:36px}
-  .btn-text{font-size:40px}
+  .btn-row{flex-direction:column;gap:44px}
+  .btn-text{font-size:42px}
   .zv-text{font-size:36px}
-  .iran-btn,.zugvogel-btn{padding:18px 36px}
+  .iran-btn,.zugvogel-btn{padding:18px 34px}
 }
 </style>
 </head>
 <body>
 
-<div id="camo-static"><canvas id="cv-camo"></canvas></div>
-<div id="sun"><canvas id="cv-sun"></canvas></div>
-<div id="holes"><canvas id="cv-holes"></canvas></div>
-<div id="leaves"><canvas id="cv-leaves"></canvas></div>
+<div id="layer-camo"><canvas id="cv-camo"></canvas></div>
+<div id="layer-sun"><canvas id="cv-sun"></canvas></div>
+<div id="layer-holes"><canvas id="cv-holes"></canvas></div>
+<div id="layer-leaves"><canvas id="cv-leaves"></canvas></div>
+<div id="layer-depth"><canvas id="cv-depth"></canvas></div>
+<div id="layer-atmos"><canvas id="cv-atmos"></canvas></div>
 
 <div class="center-ui">
   <div class="btn-row">
@@ -131,7 +169,7 @@ body{background:#1a1f12;overflow:hidden;height:100vh;width:100vw}
 </div>
 
 <script>
-var W,H,dpr=devicePixelRatio;
+var W,H,dpr=Math.min(devicePixelRatio,2);
 var cvCamo=document.getElementById('cv-camo');
 var cxCamo=cvCamo.getContext('2d');
 var cvSun=document.getElementById('cv-sun');
@@ -140,40 +178,64 @@ var cvHoles=document.getElementById('cv-holes');
 var cxHoles=cvHoles.getContext('2d');
 var cvLeaves=document.getElementById('cv-leaves');
 var cxLeaves=cvLeaves.getContext('2d');
+var cvDepth=document.getElementById('cv-depth');
+var cxDepth=cvDepth.getContext('2d');
+var cvAtmos=document.getElementById('cv-atmos');
+var cxAtmos=cvAtmos.getContext('2d');
 
-var COLORS=['#2d3a1f','#4a5a2e','#3b4a28','#1e2a14','#5c6b3a','#2a2a1a','#3d4e2a','#5a4a30','#1a1f12','#6b7a4a','#3a3020','#4e5e30'];
-var ROSA=['#f8bbd0','#f48fb1','#f06292','#ec407a','#e8a0bf','#d4849a','#c9738e','#e1bee7','#ce93d8','#f3c4d7','#fce4ec','#e8b4c8'];
+// Richer earthy greens + deep shadows
+var COLORS=[
+  '#2d3a1f','#3e4e27','#4a5a2e','#3b4a28',
+  '#1e2a14','#556835','#2a3318','#3d4e2a',
+  '#5a4a30','#1a1f12','#627548','#3a3020',
+  '#4e5e30','#263318','#48602e','#1c2412'
+];
+var ROSA=[
+  '#f8bbd0','#f48fb1','#f06292','#ec407a',
+  '#e8a0bf','#d4849a','#c9738e','#e1bee7',
+  '#ce93d8','#f3c4d7','#fce4ec','#e8b4c8'
+];
+
 var patches=[];
 var sunAngle=0;
+var atmosT=0;
 
-// Color interpolation helper: hex to rgb, lerp, rgb to hex
-function hexToRgb(h){var r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16);return[r,g,b];}
-function rgbToHex(r,g,b){return '#'+[r,g,b].map(function(v){var s=Math.round(Math.max(0,Math.min(255,v))).toString(16);return s.length<2?'0'+s:s;}).join('');}
-function lerpColor(c1,c2,t){var a=hexToRgb(c1),b=hexToRgb(c2);return rgbToHex(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t);}
+function hexToRgb(h){
+  return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+}
+function rgbToHex(r,g,b){
+  return'#'+[r,g,b].map(function(v){
+    var s=Math.round(Math.max(0,Math.min(255,v))).toString(16);
+    return s.length<2?'0'+s:s;
+  }).join('');
+}
+function lerpColor(c1,c2,t){
+  var a=hexToRgb(c1),b=hexToRgb(c2);
+  return rgbToHex(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t);
+}
 
 function resize(){
   W=window.innerWidth;H=window.innerHeight;
-  [cvCamo,cvSun,cvHoles,cvLeaves].forEach(function(c){
+  [cvCamo,cvSun,cvHoles,cvLeaves,cvDepth,cvAtmos].forEach(function(c){
     c.width=W*dpr;c.height=H*dpr;
+    c.style.width=W+'px';c.style.height=H+'px';
     c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
   });
 }
 
 function makePath(cx,pts){
   cx.beginPath();
-  cx.moveTo(pts[0].x,pts[0].y);
-  for(var i=1;i<pts.length;i++){
-    var p=pts[i-1],c=pts[i];
-    cx.quadraticCurveTo(p.x,p.y,(p.x+c.x)/2,(p.y+c.y)/2);
+  cx.moveTo((pts[pts.length-1].x+pts[0].x)/2,(pts[pts.length-1].y+pts[0].y)/2);
+  for(var i=0;i<pts.length;i++){
+    var p=pts[i],n=pts[(i+1)%pts.length];
+    cx.quadraticCurveTo(p.x,p.y,(p.x+n.x)/2,(p.y+n.y)/2);
   }
-  var last=pts[pts.length-1],first=pts[0];
-  cx.quadraticCurveTo(last.x,last.y,(last.x+first.x)/2,(last.y+first.y)/2);
   cx.closePath();
 }
 
 function genPatches(){
   patches=[];
-  var size=55;
+  var size=52;
   var cols=Math.ceil(W/size)+3;
   var rows=Math.ceil(H/size)+3;
   for(var row=0;row<rows;row++){
@@ -182,115 +244,133 @@ function genPatches(){
       var by=row*size-size*1.5;
       var pts=[];
       var np=5+Math.floor(Math.random()*5);
-      var r=size*(.45+Math.random()*.45);
+      var r=size*(.42+Math.random()*.42);
       for(var p=0;p<np;p++){
         var a=(p/np)*Math.PI*2;
-        var pr=r*(.6+Math.random()*.7);
+        var pr=r*(.55+Math.random()*.75);
         pts.push({
-          x:Math.cos(a)*pr+(Math.random()-.5)*size*.35,
-          y:Math.sin(a)*pr+(Math.random()-.5)*size*.35
+          x:Math.cos(a)*pr+(Math.random()-.5)*size*.3,
+          y:Math.sin(a)*pr+(Math.random()-.5)*size*.3
         });
       }
+      var depth=Math.random(); // 0=back,1=front
       patches.push({
         x:bx+(Math.random()-.5)*size*.4,
         y:by+(Math.random()-.5)*size*.4,
         pts:pts,
         col:COLORS[Math.floor(Math.random()*COLORS.length)],
         rosaCol:ROSA[Math.floor(Math.random()*ROSA.length)],
-        outline:Math.random()>.6,
+        outline:Math.random()>.55,
+        depth:depth,
         delay:0,
-        fs:50+Math.random()*90,
+        fs:45+Math.random()*80,
         rot:0,
-        rs:(Math.random()-.5)*3,
-        sa:15+Math.random()*50,
-        sf:.4+Math.random()*1.8,
+        rs:(Math.random()-.5)*2.5,
+        sa:12+Math.random()*40,
+        sf:.35+Math.random()*1.6,
         phase:Math.random()*Math.PI*2,
-        falling:false,
-        fallen:false,
-        ft:0,
-        alpha:1,
-        ox:0,oy:0
+        falling:false,fallen:false,
+        ft:0,alpha:1,ox:0,oy:0
       });
     }
   }
+  // Sort by depth so deeper patches paint first
+  patches.sort(function(a,b){return a.depth-b.depth;});
   var order=patches.slice();
   order.sort(function(){return Math.random()-.5;});
-  order.forEach(function(p,i){
-    p.delay=2+(i/order.length)*30+Math.random()*4;
-  });
+  order.forEach(function(p,i){p.delay=2+(i/order.length)*28+Math.random()*4;});
   patches.forEach(function(p){p.ox=p.x;p.oy=p.y;});
 }
 
 function paintCamo(){
-  cxCamo.fillStyle='#1a1f12';
+  cxCamo.fillStyle='#0e120a';
   cxCamo.fillRect(0,0,W,H);
   patches.forEach(function(p){
     cxCamo.save();
     cxCamo.translate(p.x,p.y);
     makePath(cxCamo,p.pts);
-    cxCamo.fillStyle=p.col;
+
+    // Subtle per-patch gradient for depth
+    var sz=60;
+    var g=cxCamo.createLinearGradient(-sz,-sz,sz,sz);
+    var rgb=hexToRgb(p.col);
+    g.addColorStop(0,rgbToHex(
+      Math.min(255,rgb[0]+18),Math.min(255,rgb[1]+18),Math.min(255,rgb[2]+10)));
+    g.addColorStop(1,rgbToHex(
+      Math.max(0,rgb[0]-12),Math.max(0,rgb[1]-12),Math.max(0,rgb[2]-8)));
+    cxCamo.fillStyle=g;
     cxCamo.fill();
+
     if(p.outline){
-      cxCamo.strokeStyle='rgba(10,10,5,.35)';
-      cxCamo.lineWidth=1.5;
+      var d=p.depth;
+      cxCamo.strokeStyle='rgba(5,8,3,'+(0.15+d*0.25)+')';
+      cxCamo.lineWidth=d>0.6?1.8:1;
       cxCamo.stroke();
     }
     cxCamo.restore();
   });
+
+  // Overall darkening vignette baked into camo
+  var vig=cxCamo.createRadialGradient(W*.5,H*.5,H*.1,W*.5,H*.5,H*.85);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(1,'rgba(0,0,0,.55)');
+  cxCamo.fillStyle=vig;
+  cxCamo.fillRect(0,0,W,H);
 }
 
 function drawSun(){
   cxSun.clearRect(0,0,W,H);
-  var g=cxSun.createRadialGradient(W*.5,-H*.05,0,W*.5,-H*.05,H*1.3);
-  g.addColorStop(0,'#fff8d0');
-  g.addColorStop(0.15,'#ffe870');
-  g.addColorStop(0.35,'#f0c030');
-  g.addColorStop(0.6,'#d09018');
-  g.addColorStop(1,'#1a1508');
+
+  // Main radial sunlight – origin slightly above top-center
+  var sx=W*.5,sy=-H*.08;
+  var g=cxSun.createRadialGradient(sx,sy,0,sx,sy,H*1.4);
+  g.addColorStop(0  ,'rgba(255,252,220,1)');
+  g.addColorStop(0.04,'rgba(255,235,120,.9)');
+  g.addColorStop(0.12,'rgba(240,190,60,.75)');
+  g.addColorStop(0.3 ,'rgba(180,130,20,.45)');
+  g.addColorStop(0.65,'rgba(80,60,8,.2)');
+  g.addColorStop(1   ,'rgba(0,0,0,0)');
   cxSun.fillStyle=g;
   cxSun.fillRect(0,0,W,H);
+
+  // Light rays (god rays)
   cxSun.save();
-  cxSun.translate(W*.5,-H*.05);
-  var rayCount=24;
+  cxSun.translate(sx,sy);
+  var rayCount=32;
   for(var i=0;i<rayCount;i++){
     var a1=(i/rayCount)*Math.PI*2+sunAngle;
-    var a2=((i+.5)/rayCount)*Math.PI*2+sunAngle;
-    var len=H*2.5;
+    var a2=((i+.4)/rayCount)*Math.PI*2+sunAngle;
+    var len=H*2.8;
+    var bright=i%2===0;
     cxSun.beginPath();
     cxSun.moveTo(0,0);
     cxSun.lineTo(Math.cos(a1)*len,Math.sin(a1)*len);
     cxSun.lineTo(Math.cos(a2)*len,Math.sin(a2)*len);
     cxSun.closePath();
-    cxSun.fillStyle=i%2===0?'rgba(255,248,180,.18)':'rgba(255,220,60,.08)';
+    cxSun.fillStyle=bright?'rgba(255,245,160,.14)':'rgba(255,220,80,.06)';
     cxSun.fill();
   }
   cxSun.restore();
-  cxSun.save();
-  cxSun.globalAlpha=.06;
-  for(var dx=0;dx<W;dx+=12){
-    for(var dy=0;dy<H;dy+=12){
-      var dist=Math.sqrt((dx-W*.5)*(dx-W*.5)+(dy+H*.05)*(dy+H*.05));
-      var r=Math.max(0,3-dist/(H*.4)*3);
-      if(r>0.3){
-        cxSun.beginPath();
-        cxSun.arc(dx,dy,r,0,Math.PI*2);
-        cxSun.fillStyle='#000';
-        cxSun.fill();
-      }
-    }
-  }
-  cxSun.restore();
-  sunAngle+=0.0008;
+
+  // Secondary warm haze band near horizon
+  var haze=cxSun.createLinearGradient(0,H*.3,0,H*.85);
+  haze.addColorStop(0,'rgba(200,150,20,.0)');
+  haze.addColorStop(.4,'rgba(160,110,15,.12)');
+  haze.addColorStop(1,'rgba(40,30,5,.0)');
+  cxSun.fillStyle=haze;
+  cxSun.fillRect(0,0,W,H);
+
+  sunAngle+=0.00055;
 }
 
 function drawHoles(){
   cxHoles.clearRect(0,0,W,H);
-  cxHoles.fillStyle='#1a1f12';
+  cxHoles.fillStyle='#0e120a';
   cxHoles.fillRect(0,0,W,H);
   cxHoles.globalCompositeOperation='destination-out';
   patches.forEach(function(p){
     if(!p.falling&&!p.fallen)return;
-    var progress=p.fallen?1:Math.min(1,p.ft*2);
+    var progress=p.fallen?1:Math.min(1,p.ft*2.2);
     cxHoles.save();
     cxHoles.translate(p.ox,p.oy);
     cxHoles.globalAlpha=progress;
@@ -305,21 +385,109 @@ function drawLeaves(){
   cxLeaves.clearRect(0,0,W,H);
   patches.forEach(function(p){
     if(!p.falling||p.fallen)return;
-    // Blend from original camo color to rosa as leaf falls
-    var blend=Math.min(1,p.ft*0.8);
+    var blend=Math.min(1,p.ft*0.7);
     var fallColor=lerpColor(p.col,p.rosaCol,blend);
     cxLeaves.save();
     cxLeaves.translate(p.x,p.y);
     cxLeaves.rotate(p.rot);
     cxLeaves.globalAlpha=p.alpha;
+
+    // Slight scale as falling (perspective shrink)
+    var sc=1-p.ft*0.04;
+    if(sc>0.3)cxLeaves.scale(sc,sc);
+
     makePath(cxLeaves,p.pts);
-    cxLeaves.fillStyle=fallColor;
+
+    // Gradient on each falling leaf
+    var lr=55;
+    var lg=cxLeaves.createLinearGradient(-lr,-lr,lr,lr);
+    var lrgb=hexToRgb(fallColor);
+    lg.addColorStop(0,rgbToHex(
+      Math.min(255,lrgb[0]+30),Math.min(255,lrgb[1]+25),Math.min(255,lrgb[2]+15)));
+    lg.addColorStop(1,rgbToHex(
+      Math.max(0,lrgb[0]-20),Math.max(0,lrgb[1]-20),Math.max(0,lrgb[2]-12)));
+    cxLeaves.fillStyle=lg;
     cxLeaves.fill();
-    cxLeaves.strokeStyle=blend>0.5?'rgba(100,40,60,.4)':'rgba(10,10,5,.5)';
-    cxLeaves.lineWidth=2;
+
+    // Outline fades in with blend
+    cxLeaves.strokeStyle=blend>0.4
+      ?'rgba(80,30,50,'+(0.3+blend*0.3)+')'
+      :'rgba(8,10,4,'+(0.3+p.depth*0.3)+')';
+    cxLeaves.lineWidth=1.5;
     cxLeaves.stroke();
+
+    // Tiny highlight stroke on top edge
+    cxLeaves.beginPath();
+    var pts=p.pts;
+    cxLeaves.moveTo(pts[0].x,pts[0].y);
+    for(var k=1;k<Math.ceil(pts.length/2);k++){
+      cxLeaves.lineTo(pts[k].x,pts[k].y);
+    }
+    cxLeaves.strokeStyle='rgba(255,255,220,'+(0.06+blend*0.06)+')';
+    cxLeaves.lineWidth=1;
+    cxLeaves.stroke();
+
     cxLeaves.restore();
   });
+}
+
+// Depth/vignette pass – refreshed occasionally, not every frame
+var depthDirty=true;
+function drawDepth(){
+  if(!depthDirty)return;
+  depthDirty=false;
+  cxDepth.clearRect(0,0,W,H);
+  // Vignette
+  var v=cxDepth.createRadialGradient(W*.5,H*.5,H*.05,W*.5,H*.5,H*.9);
+  v.addColorStop(0,'rgba(0,0,0,0)');
+  v.addColorStop(.7,'rgba(0,0,0,.18)');
+  v.addColorStop(1,'rgba(0,0,0,.65)');
+  cxDepth.fillStyle=v;
+  cxDepth.fillRect(0,0,W,H);
+  // Top light bleed
+  var top=cxDepth.createLinearGradient(0,0,0,H*.35);
+  top.addColorStop(0,'rgba(200,180,60,.08)');
+  top.addColorStop(1,'rgba(0,0,0,0)');
+  cxDepth.fillStyle=top;
+  cxDepth.fillRect(0,0,W,H);
+}
+
+// Atmospheric particles – lazy dust motes
+var motes=[];
+function initMotes(){
+  motes=[];
+  var n=Math.floor((W*H)/14000);
+  for(var i=0;i<n;i++){
+    motes.push({
+      x:Math.random()*W,y:Math.random()*H,
+      r:.8+Math.random()*2.2,
+      a:Math.random()*.35,
+      vx:(Math.random()-.5)*.18,
+      vy:-.04-Math.random()*.14,
+      phase:Math.random()*Math.PI*2
+    });
+  }
+}
+function drawAtmos(){
+  cxAtmos.clearRect(0,0,W,H);
+  var t=atmosT;
+  motes.forEach(function(m){
+    m.x+=m.vx+Math.sin(t*.4+m.phase)*.18;
+    m.y+=m.vy;
+    if(m.y<-5){m.y=H+5;m.x=Math.random()*W;}
+    if(m.x<-5)m.x=W+5;
+    if(m.x>W+5)m.x=-5;
+    // brightness based on proximity to sun beam
+    var dx=m.x-W*.5,dy=m.y+H*.08;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    var sunBoost=Math.max(0,1-dist/(H*.6));
+    var alpha=m.a*(0.4+sunBoost*1.4);
+    cxAtmos.beginPath();
+    cxAtmos.arc(m.x,m.y,m.r,0,Math.PI*2);
+    cxAtmos.fillStyle='rgba(220,200,120,'+alpha.toFixed(3)+')';
+    cxAtmos.fill();
+  });
+  atmosT+=0.016;
 }
 
 var startTime=Date.now();
@@ -327,19 +495,15 @@ function update(){
   var elapsed=(Date.now()-startTime)/1000;
   patches.forEach(function(p){
     if(p.fallen)return;
-    if(!p.falling&&elapsed>p.delay){
-      p.falling=true;
-      p.ft=0;
-    }
+    if(!p.falling&&elapsed>p.delay){p.falling=true;p.ft=0;}
     if(p.falling){
       p.ft+=1/60;
-      p.y=p.oy+p.ft*p.fs+p.ft*p.ft*20;
+      var grav=p.ft*p.ft*18;
+      p.y=p.oy+p.ft*p.fs+grav;
       p.x=p.ox+Math.sin(p.ft*p.sf+p.phase)*p.sa;
       p.rot+=p.rs*(1/60);
-      p.alpha=Math.max(0,1-p.ft*.25);
-      if(p.y>H+120||p.alpha<=0){
-        p.fallen=true;
-      }
+      p.alpha=Math.max(0,1-p.ft*.22);
+      if(p.y>H+150||p.alpha<=0)p.fallen=true;
     }
   });
 }
@@ -349,6 +513,8 @@ function frame(){
   drawSun();
   drawHoles();
   drawLeaves();
+  drawDepth();
+  drawAtmos();
   requestAnimationFrame(frame);
 }
 
@@ -356,6 +522,7 @@ function init(){
   resize();
   genPatches();
   paintCamo();
+  initMotes();
   frame();
 }
 
@@ -363,6 +530,8 @@ window.addEventListener('resize',function(){
   resize();
   genPatches();
   paintCamo();
+  initMotes();
+  depthDirty=true;
   startTime=Date.now();
 });
 
