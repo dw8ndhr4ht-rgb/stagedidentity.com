@@ -13,59 +13,17 @@ body{background:#1a1f12;overflow:hidden;height:100vh;width:100vw}
 #leaves{position:fixed;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none}
 #holes{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3}
 #camo-static canvas,#sun canvas,#leaves canvas,#holes canvas{width:100%;height:100%}
-.center-ui{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:none}
+.center-ui{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:none;padding:24px}
 
-.btn-row{
-  display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;
-}
-
-/* Zugvogel Button */
-.zugvogel-btn{
-  pointer-events:all;text-decoration:none;position:relative;
-  display:flex;align-items:center;justify-content:center;
-  padding:24px 48px;
-  background:rgba(26,26,46,0.85);
-  border:3px solid rgba(244,143,177,0.4);
-  box-shadow:6px 6px 0 rgba(20,20,35,0.8);
-  transition:all .2s;
-  cursor:pointer;
-  backdrop-filter:blur(4px);
-}
-.zugvogel-btn:hover{
-  transform:translate(-3px,-3px);
-  box-shadow:9px 9px 0 rgba(20,20,35,0.8);
-  background:rgba(40,30,55,0.9);
-  border-color:rgba(244,143,177,0.7);
-}
-.zugvogel-btn:active{
-  transform:translate(3px,3px);
-  box-shadow:3px 3px 0 rgba(20,20,35,0.8);
-}
-.zv-text{
+.sale-text{
   font-family:Georgia,'Times New Roman',serif;
-  font-size:48px;
   font-style:italic;
-  color:#f8bbd0;
+  font-size:clamp(20px,4.2vw,48px);
+  line-height:1.3;
   letter-spacing:.04em;
+  color:#f8bbd0;
+  text-align:center;
   text-shadow:2px 2px 0 rgba(20,20,35,0.9),0 0 30px rgba(236,64,122,0.3);
-}
-.zv-sub{
-  position:absolute;
-  bottom:-26px;
-  font-family:Georgia,'Times New Roman',serif;
-  font-size:11px;
-  font-weight:700;
-  letter-spacing:.3em;
-  text-transform:uppercase;
-  color:rgba(244,143,177,0.5);
-  text-shadow:1px 1px 0 rgba(20,20,35,0.9);
-}
-
-@media(max-width:680px){
-  .btn-row{flex-direction:column;gap:36px}
-  .btn-text{font-size:40px}
-  .zv-text{font-size:36px}
-  .iran-btn,.zugvogel-btn{padding:18px 36px}
 }
 </style>
 </head>
@@ -77,16 +35,7 @@ body{background:#1a1f12;overflow:hidden;height:100vh;width:100vw}
 <div id="leaves"><canvas id="cv-leaves"></canvas></div>
 
 <div class="center-ui">
-  <div class="btn-row">
-    <a class="iran-btn" href="./iran/">
-      <span class="btn-text">Iran</span>
-      <span class="btn-sub">Probability Tracker</span>
-    </a>
-    <a class="zugvogel-btn" href="./Zugvogel/">
-      <span class="zv-text">Zugvögel</span>
-      <span class="zv-sub">Migration Tracker</span>
-    </a>
-  </div>
+  <p class="sale-text">THIS DOMAIN IS FOR SALE contact@stagedidentity.com</p>
 </div>
 
 <script>
@@ -329,3 +278,4 @@ init();
 </script>
 </body>
 </html>
+
